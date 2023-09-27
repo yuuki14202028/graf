@@ -42,6 +42,10 @@ impl Vector3d {
     pub fn scale(&self, scalar: f32) -> Vector3d {
         Vector3d { x: self.x * scalar, y: self.y * scalar, z: self.z * scalar }
     }
+
+    pub fn to_list(&self) -> [f32;3] {
+        [self.x, self.y, self.z]
+    }
 }
 
 impl ops::Add for Vector3d {
