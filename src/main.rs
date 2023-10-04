@@ -12,9 +12,9 @@ use crate::matrix44d::Matrix44d;
 use crate::vector3d::Vector3d;
 use crate::vertex::Vertex;
 use std::{env, fs};
-use std::path::Path;
+use std::ops::Sub;
 use glium::glutin::event::{ElementState, MouseButton};
-use glium::index::PrimitiveType::TriangleStrip;
+use glium::index::PrimitiveType::{LineStrip, TriangleStrip};
 
 
 fn main() -> Result<(), std::io::Error> {
@@ -24,34 +24,25 @@ fn main() -> Result<(), std::io::Error> {
 
     let vert_str = fs::read_to_string("./shader/default.vert")?;
     let frag_str = fs::read_to_string("./shader/default.frag")?;
+    let vert_wire_str = fs::read_to_string("./shader/wire.vert")?;
+    let frag_wire_str = fs::read_to_string("./shader/wire.frag")?;
 
-    let mut event_loop = glutin::event_loop::EventLoop::new();
+    let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new();
     let cb = glutin::ContextBuilder::new();
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
 
-    let vertex1 = Vertex { position: [   0.5,  0.5,  0.5], normal: [  0.5,  0.5,  0.5] };
-    let vertex2 = Vertex { position: [  -0.5,  0.5,  0.5], normal: [ -0.5,  0.5,  0.5] };
-    let vertex3 = Vertex { position: [  -0.5,  0.5, -0.5], normal: [ -0.5,  0.5, -0.5] };
-    let vertex4 = Vertex { position: [   0.5,  0.5, -0.5], normal: [  0.5,  0.5, -0.5] };
-    let vertex5 = Vertex { position: [   0.5, -0.5,  0.5], normal: [  0.5, -0.5,  0.5] };
-    let vertex6 = Vertex { position: [  -0.5, -0.5,  0.5], normal: [ -0.5, -0.5,  0.5] };
-    let vertex7 = Vertex { position: [  -0.5, -0.5, -0.5], normal: [ -0.5, -0.5, -0.5] };
-    let vertex8 = Vertex { position: [   0.5, -0.5, -0.5], normal: [  0.5, -0.5, -0.5] };
-    let shape = vec![vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7, vertex8];
+    let vertex1 = Vertex { position: [   0.5,  0.5,  0.5], normal: [  0.5,  0.5,  0.5], color: [0.0, 0.0, 0.0, 1.0] };
+    let vertex2 = Vertex { position: [  -0.5,  0.5,  0.5], normal: [ -0.5,  0.5,  0.5], color: [0.0, 0.0, 0.0, 1.0] };
+    let vertex3 = Vertex { position: [  -0.5,  0.5, -0.5], normal: [ -0.5,  0.5, -0.5], color: [0.0, 0.0, 0.0, 1.0] };
+    let vertex4 = Vertex { position: [   0.5,  0.5, -0.5], normal: [  0.5,  0.5, -0.5], color: [0.0, 0.0, 0.0, 1.0] };
+    let vertex5 = Vertex { position: [   0.5, -0.5,  0.5], normal: [  0.5, -0.5,  0.5], color: [0.0, 0.0, 0.0, 1.0] };
+    let vertex6 = Vertex { position: [  -0.5, -0.5,  0.5], normal: [ -0.5, -0.5,  0.5], color: [0.0, 0.0, 0.0, 1.0] };
+    let vertex7 = Vertex { position: [  -0.5, -0.5, -0.5], normal: [ -0.5, -0.5, -0.5], color: [0.0, 0.0, 0.0, 1.0] };
+    let vertex8 = Vertex { position: [   0.5, -0.5, -0.5], normal: [  0.5, -0.5, -0.5], color: [0.0, 0.0, 0.0, 1.0] };
+    let mut shape = vec![vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7, vertex8];
 
-    let vertex1_mini = Vertex { position: [   0.05,  0.05,  0.05], normal: [  0.05,  0.05,  0.05] };
-    let vertex2_mini = Vertex { position: [  -0.05,  0.05,  0.05], normal: [ -0.05,  0.05,  0.05] };
-    let vertex3_mini = Vertex { position: [  -0.05,  0.05, -0.05], normal: [ -0.05,  0.05, -0.05] };
-    let vertex4_mini = Vertex { position: [   0.05,  0.05, -0.05], normal: [  0.05,  0.05, -0.05] };
-    let vertex5_mini = Vertex { position: [   0.05, -0.05,  0.05], normal: [  0.05, -0.05,  0.05] };
-    let vertex6_mini = Vertex { position: [  -0.05, -0.05,  0.05], normal: [ -0.05, -0.05,  0.05] };
-    let vertex7_mini = Vertex { position: [  -0.05, -0.05, -0.05], normal: [ -0.05, -0.05, -0.05] };
-    let vertex8_mini = Vertex { position: [   0.05, -0.05, -0.05], normal: [  0.05, -0.05, -0.05] };
-    let shape_mini = vec![vertex1_mini, vertex2_mini, vertex3_mini, vertex4_mini, vertex5_mini, vertex6_mini, vertex7_mini, vertex8_mini];
-
-    let vertex_buffer = glium::VertexBuffer::new(&display, &shape).unwrap();
-    let vertex_buffer_mini = glium::VertexBuffer::new(&display, &shape_mini).unwrap();
+    let mut vertex_buffer = glium::VertexBuffer::new(&display, &shape).unwrap();
 
     let indices: [u16; 36] = [
         // Ceiling
@@ -75,6 +66,7 @@ fn main() -> Result<(), std::io::Error> {
         4, 7, 3
     ];
     let index_buffer = glium::IndexBuffer::new(&display, TriangleStrip, &indices).unwrap();
+    let index_buffer_wire = glium::IndexBuffer::new(&display, LineStrip, &indices).unwrap();
 
     let light = [-1.0, 0.4, 0.9f32];
 
@@ -101,9 +93,9 @@ fn main() -> Result<(), std::io::Error> {
     let model = Matrix44d::translate(0.0, 0.0, 0.0);
 
     let program = glium::Program::from_source(&display, &vert_str, &frag_str, None).unwrap();
+    let program_wire = glium::Program::from_source(&display, &vert_wire_str, &frag_wire_str, None).unwrap();
 
     let mut time = std::time::Instant::now();
-    let mut ticks: f32 = 0.0;
     let mut mouse_move = false;
     let mut mouse_delta = (0.0, 0.0);
 
@@ -204,10 +196,10 @@ fn main() -> Result<(), std::io::Error> {
             vertical_angle -= mouse_delta.1;
         }
 
-        let mut camera_direction = Vector3d::new(
-            (vertical_angle.cos() * horizontal_angle.sin()),
+        let camera_direction = Vector3d::new(
+            vertical_angle.cos() * horizontal_angle.sin(),
             vertical_angle.sin(),
-            (vertical_angle.cos() * horizontal_angle.cos()),
+            vertical_angle.cos() * horizontal_angle.cos(),
         );
 
         let right = Vector3d::new(0.0, 1.0, 0.0).cross(camera_direction).normalize();
@@ -241,12 +233,27 @@ fn main() -> Result<(), std::io::Error> {
             up,
         );
 
+        let target_position = camera_position + camera_direction;
+        let target_vertex_index = shape.iter_mut().enumerate().min_by(|(_, a), (_, b)| {
+            let a_vec = Vector3d::from_vec(a.position);
+            let b_vec = Vector3d::from_vec(b.position);
+            a_vec.sub(target_position).length().partial_cmp(&b_vec.sub(target_position).length()).unwrap()
+        });
+
+        match target_vertex_index {
+            None => {}
+            Some((index, &mut mut vertex)) => {
+                vertex.color = [1.0, 0.5, 0.0, 1.0];
+                vertex_buffer.map_write().set(index, vertex);
+            }
+        }
 
 
         let mut target = display.draw();
         target.clear_color_and_depth((0.025, 0.025, 0.025, 1.0), 1.0);
 
         let params = glium::DrawParameters {
+            line_width: Option::from(5.0f32),
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
                 write: true,
@@ -264,20 +271,26 @@ fn main() -> Result<(), std::io::Error> {
             pos: Vector3d::new(0.0, 0.0, 0.0).to_list()
         }, &params).unwrap();
 
-        println!("{:?}", camera_position);
-
-        target.draw(&vertex_buffer_mini, &index_buffer, &program, &uniform! {
+        target.draw(&vertex_buffer, &index_buffer_wire, &program_wire, &uniform! {
             resolution: [display.get_framebuffer_dimensions().0 as f32, display.get_framebuffer_dimensions().1 as f32],
             projection: projection.to_list(),
             view: view.to_list(),
             model: model.to_list(),
             u_light: light,
-            pos: (camera_position + camera_direction).to_list()
+            pos: Vector3d::new(0.0, 0.0, 0.0).to_list()
         }, &params).unwrap();
+
+        match target_vertex_index {
+            None => {}
+            Some((index, &mut mut vertex)) => {
+                vertex.color = [0.0, 0.0, 0.0, 1.0];
+                vertex_buffer.map_write().set(index, vertex);
+            }
+        }
 
         target.finish().unwrap();
 
-        let next_frame_time = std::time::Instant::now() +
+        let next_frame_time = Instant::now() +
             std::time::Duration::from_nanos(16_666_667);
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
     });

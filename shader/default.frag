@@ -1,7 +1,6 @@
 #version 140
 
 in vec3 v_normal;
-
 out vec4 color;
 
 uniform vec3 u_light;

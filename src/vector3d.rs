@@ -13,6 +13,10 @@ impl Vector3d {
         Vector3d { x: x, y: y, z: z }
     }
 
+    pub fn from_vec(xyz: [f32; 3]) -> Vector3d {
+        Vector3d { x: xyz[0], y: xyz[1], z: xyz[2] }
+    }
+
     pub fn length(&self) -> f32 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
